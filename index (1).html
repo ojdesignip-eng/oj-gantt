@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OJ DESIGN STUDIO — 專案時程</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F2EFE8;
+  --surface: #FAFAF7;
+  --border: rgba(0,0,0,0.08);
+  --border-strong: rgba(0,0,0,0.16);
+  --text: #1C1C1A;
+  --text-muted: #6B6A65;
+  --text-faint: #A8A7A2;
+  --accent: #2B2B28;
+  --radius: 6px;
+  --font-body: 'Noto Sans TC', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+
+  --cd: #C8C4F0;
+  --cd-text: #3B3580;
+  --sd: #A4B8F5;
+  --sd-text: #1A3A8F;
+  --dd: #7CA8F0;
+  --dd-text: #0D2E6E;
+  --demo: #F0C8B0;
+  --demo-text: #6B2C10;
+  --mep: #B0D4F5;
+  --mep-text: #0D3B66;
+  --wood: #C0DCA0;
+  --wood-text: #2A5010;
+  --finish: #F5D890;
+  --finish-text: #5E3D00;
+  --fit: #A8E0CC;
+  --fit-text: #0A4535;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+header {
+  padding: 20px 28px 16px;
+  border-bottom: 0.5px solid var(--border-strong);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.brand-name {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--text);
+}
+
+.brand-sub {
+  font-size: 12px;
+  color: var(--text-faint);
+  font-weight: 300;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 14px;
+  border: 0.5px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: var(--font-body);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.pill:hover { background: var(--bg); color: var(--text); }
+.pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.pill.btn-load { border-color: var(--accent); color: var(--accent); font-weight: 500; }
+.pill.btn-load:hover { background: var(--accent); color: #fff; }
+
+.sep { width: 0.5px; height: 16px; background: var(--border-strong); }
+
+select.pill {
+  appearance: none;
+  padding-right: 22px;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%236B6A65' stroke-width='1.2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+
+.status-bar {
+  padding: 8px 28px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 0.5px solid var(--border);
+  min-height: 34px;
+}
+.status-bar.loading { color: var(--text-faint); }
+.status-bar.error { color: #A32D2D; background: #FDF0F0; }
+.status-bar.success { color: #0F6E56; }
+.status-bar.hint { color: var(--text-faint); }
+
+.dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.dot.pulse { animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+.main { padding: 20px 28px; }
+
+.legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  align-items: center;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+.legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.legend-sep {
+  width: 0.5px; height: 12px;
+  background: var(--border-strong);
+}
+
+.gantt-wrap {
+  background: var(--surface);
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.gantt-scroll { overflow-x: auto; }
+
+svg { display: block; font-family: var(--font-body); }
+
+.tip {
+  position: fixed;
+  background: var(--surface);
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--text);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s;
+  z-index: 1000;
+  max-width: 260px;
+  line-height: 1.7;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-faint);
+  font-size: 13px;
+  font-family: var(--font-mono);
+  line-height: 2;
+}
+
+.config-panel {
+  background: var(--surface);
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+  display: none;
+}
+.config-panel.open { display: block; }
+.config-panel h3 { font-size: 12px; font-family: var(--font-mono); letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 14px; }
+.config-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.config-row label { font-size: 12px; color: var(--text-muted); min-width: 80px; }
+.config-row input {
+  flex: 1;
+  min-width: 200px;
+  height: 32px;
+  padding: 0 10px;
+  border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text);
+  outline: none;
+}
+.config-row input:focus { border-color: var(--accent); }
+.config-note { font-size: 11px; color: var(--text-faint); margin-top: 10px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="brand-name">OJ DESIGN STUDIO</span>
+    <span class="brand-sep" style="color:var(--text-faint)">—</span>
+    <span class="brand-sub">專案時程甘特圖</span>
+  </div>
+  <div class="header-right">
+    <select class="pill" id="sel-view">
+      <option value="all">全部時程</option>
+      <option value="design">設計時程</option>
+      <option value="construction">施工時程</option>
+    </select>
+    <select class="pill" id="sel-months">
+      <option value="3">3 個月</option>
+      <option value="6" selected>6 個月</option>
+      <option value="12">12 個月</option>
+    </select>
+    <select class="pill" id="sel-project"><option value="">所有專案</option></select>
+    <div class="sep"></div>
+    <button class="pill" onclick="jumpToday()">↩ 今日</button>
+    <button class="pill btn-load" onclick="loadFromNotion()">↻ 讀取 Notion</button>
+    <button class="pill" onclick="toggleConfig()">⚙ 設定</button>
+  </div>
+</header>
+
+<div class="status-bar hint" id="status-bar">
+  <div class="dot"></div>
+  <span id="status-msg">請點選「⚙ 設定」輸入 Notion API Token，或直接瀏覽範例資料</span>
+</div>
+
+<div class="main">
+  <div class="config-panel" id="config-panel">
+    <h3>NOTION API 設定</h3>
+    <div class="config-row">
+      <label>API Token</label>
+      <input id="cfg-token" type="password" placeholder="ntn_xxxxxxxxxxxxxxxxxxxx 或 secret_xxx..." oninput="saveConfig()">
+    </div>
+    <div class="config-row">
+      <label>設計時程庫 ID</label>
+      <input id="cfg-design-db" type="text" placeholder="5b0fa1bb-d2d1-40b0-924e-2056f7b5b731" oninput="saveConfig()">
+    </div>
+    <div class="config-row">
+      <label>施工時程庫 ID</label>
+      <input id="cfg-con-db" type="text" placeholder="1e2a1781-286b-4ba3-a023-d76da9511bca" oninput="saveConfig()">
+    </div>
+    <div class="config-note">
+      設定儲存於瀏覽器 localStorage，不會上傳至任何伺服器。<br>
+      取得 Token：Notion 設定 → My integrations → New integration → Internal integration secret。<br>
+      部署至 GitHub Pages 後，需於 Notion 各資料庫的 Connections 設定加入此 integration。
+    </div>
+  </div>
+
+  <div class="legend" id="legend"></div>
+  <div class="gantt-wrap">
+    <div class="gantt-scroll">
+      <svg id="gantt"></svg>
+    </div>
+  </div>
+</div>
+
+<div class="tip" id="tip"></div>
+
+<script>
+const TM = {
+  design_cd:  { label:'CD 概念設計', color:'#C8C4F0', text:'#3B3580', cat:'design' },
+  design_sd:  { label:'SD 初步設計', color:'#A4B8F5', text:'#1A3A8F', cat:'design' },
+  design_dd:  { label:'DD 細部設計', color:'#7CA8F0', text:'#0D2E6E', cat:'design' },
+  con_demo:   { label:'拆除工程',    color:'#F0C8B0', text:'#6B2C10', cat:'construction' },
+  con_mep:    { label:'水電空調',    color:'#B0D4F5', text:'#0D3B66', cat:'construction' },
+  con_wood:   { label:'木作天花',    color:'#C0DCA0', text:'#2A5010', cat:'construction' },
+  con_finish: { label:'油漆收尾',    color:'#F5D890', text:'#5E3D00', cat:'construction' },
+  con_fit:    { label:'軟裝安裝',    color:'#A8E0CC', text:'#0A4535', cat:'construction' },
+};
+
+const DESIGN_TO_TYPE = { 'CD 概念設計':'design_cd', 'SD 初步設計':'design_sd', 'DD 細部設計':'design_dd' };
+const GROUP_TO_TYPE  = { '拆除工程':'con_demo', '水電空調':'con_mep', '木作天花':'con_wood', '油漆收尾':'con_finish', '軟裝安裝':'con_fit' };
+
+let items = getSampleData();
+let offsetDays = 0;
+const LW = 180, HH = 48, RH = 28, BP = 5;
+
+const pd = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
+const dBetween = (a,b) => Math.round((b-a)/86400000);
+const addD = (d,n) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
+const today = () => new Date();
+
+function getSampleData() {
+  return [
+    {id:'s1', project:'萬芳 陳宅', name:'CD 概念設計', type:'design_cd', start:'2026-03-01', end:'2026-04-15', person:'Johnny', prog:30},
+    {id:'s2', project:'萬芳 陳宅', name:'SD 初步設計', type:'design_sd', start:'2026-04-16', end:'2026-06-30', person:'Johnny', prog:0},
+    {id:'s3', project:'萬芳 陳宅', name:'DD 細部設計', type:'design_dd', start:'2026-07-01', end:'2026-09-30', person:'Johnny、OJZH', prog:0},
+    {id:'s4', project:'萬芳 陳宅', name:'拆除工程',    type:'con_demo',  start:'2026-10-05', end:'2026-10-18', person:'A廠商', prog:0},
+    {id:'s5', project:'萬芳 陳宅', name:'水電空調',    type:'con_mep',   start:'2026-10-19', end:'2026-11-30', person:'B廠商', prog:0},
+    {id:'s6', project:'萬芳 陳宅', name:'木作天花',    type:'con_wood',  start:'2026-11-15', end:'2026-12-31', person:'C廠商', prog:0},
+  ];
+}
+
+function loadConfig() {
+  try {
+    const c = JSON.parse(localStorage.getItem('oj_gantt_config') || '{}');
+    document.getElementById('cfg-token').value = c.token || '';
+    document.getElementById('cfg-design-db').value = c.designDb || '5b0fa1bb-d2d1-40b0-924e-2056f7b5b731';
+    document.getElementById('cfg-con-db').value = c.conDb || '1e2a1781-286b-4ba3-a023-d76da9511bca';
+  } catch(e) {}
+}
+function saveConfig() {
+  localStorage.setItem('oj_gantt_config', JSON.stringify({
+    token: document.getElementById('cfg-token').value,
+    designDb: document.getElementById('cfg-design-db').value,
+    conDb: document.getElementById('cfg-con-db').value,
+  }));
+}
+function getConfig() {
+  try { return JSON.parse(localStorage.getItem('oj_gantt_config') || '{}'); }
+  catch(e) { return {}; }
+}
+
+function toggleConfig() {
+  document.getElementById('config-panel').classList.toggle('open');
+}
+
+function setStatus(type, msg, pulse=false) {
+  const bar = document.getElementById('status-bar');
+  const dot = bar.querySelector('.dot');
+  bar.className = 'status-bar ' + type;
+  document.getElementById('status-msg').textContent = msg;
+  dot.classList.toggle('pulse', pulse);
+}
+
+async function queryNotionDB(token, dbId) {
+  const PROXY = 'https://corsproxy.io/?';
+  const url = PROXY + encodeURIComponent(`https://api.notion.com/v1/databases/${dbId}/query`);
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Notion-Version': '2022-06-28',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ page_size: 100 }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+function getTextProp(props, key) {
+  const p = props[key];
+  if (!p) return '';
+  if (p.type === 'title') return p.title?.map(t=>t.plain_text).join('') || '';
+  if (p.type === 'rich_text') return p.rich_text?.map(t=>t.plain_text).join('') || '';
+  if (p.type === 'select') return p.select?.name || '';
+  return '';
+}
+function getPeopleProp(props, key) {
+  const p = props[key];
+  if (!p || p.type !== 'people') return '';
+  return p.people?.map(u=>u.name).join('、') || '';
+}
+function getDateProp(props, key) {
+  const p = props[key];
+  if (!p || p.type !== 'date' || !p.date) return null;
+  return { start: p.date.start, end: p.date.end };
+}
+function getRelationNames(props, key) {
+  const p = props[key];
+  if (!p || p.type !== 'relation') return [];
+  return p.relation?.map(r=>r.id) || [];
+}
+
+async function loadFromNotion() {
+  const cfg = getConfig();
+  if (!cfg.token) {
+    document.getElementById('config-panel').classList.add('open');
+    setStatus('error', '請先在設定中輸入 Notion API Token');
+    return;
+  }
+
+  setStatus('loading', '正在連接 Notion...', true);
+
+  try {
+    const [designData, conData] = await Promise.all([
+      queryNotionDB(cfg.token, cfg.designDb || '5b0fa1bb-d2d1-40b0-924e-2056f7b5b731'),
+      queryNotionDB(cfg.token, cfg.conDb || '1e2a1781-286b-4ba3-a023-d76da9511bca'),
+    ]);
+
+    const newItems = [];
+
+    for (const page of (designData.results || [])) {
+      const p = page.properties;
+      const name = getTextProp(p, '名稱');
+      const stage = getTextProp(p, '設計階段');
+      const type = DESIGN_TO_TYPE[stage] || 'design_cd';
+      const startD = getDateProp(p, '開始日期');
+      const endD = getDateProp(p, '完成日期');
+      const person = getPeopleProp(p, '負責人員');
+      const projRel = getRelationNames(p, '專案項目');
+      if (!startD || !endD) continue;
+      newItems.push({
+        id: page.id,
+        project: name || stage || '未命名',
+        name: name,
+        type,
+        start: startD.start,
+        end: endD.start,
+        person,
+        prog: 0,
+        notionId: page.id,
+      });
+    }
+
+    for (const page of (conData.results || [])) {
+      const p = page.properties;
+      const name = getTextProp(p, '名稱');
+      const group = getTextProp(p, '工程分組');
+      const type = GROUP_TO_TYPE[group] || 'con_demo';
+      const startD = getDateProp(p, '開始日期');
+      const endD = getDateProp(p, '完成日期');
+      const person = getPeopleProp(p, '負責監工');
+      if (!startD || !endD) continue;
+      newItems.push({
+        id: page.id,
+        project: name || group || '未命名',
+        name: name,
+        type,
+        start: startD.start,
+        end: endD.start,
+        person,
+        prog: 0,
+        notionId: page.id,
+      });
+    }
+
+    if (newItems.length === 0) {
+      setStatus('hint', '資料庫中尚無時程資料，顯示範例資料');
+      items = getSampleData();
+    } else {
+      items = newItems;
+      setStatus('success', `已載入 ${items.length} 筆時程（設計 ${designData.results?.length||0} + 施工 ${conData.results?.length||0}）`);
+    }
+  } catch(e) {
+    setStatus('error', `連接失敗：${e.message}。請確認 Token 是否正確，或 integration 是否已加入資料庫。`);
+    items = getSampleData();
+  }
+
+  buildProjectFilter();
+  render();
+}
+
+function buildProjectFilter() {
+  const projs = [...new Set(items.map(i=>i.project))].sort();
+  const sel = document.getElementById('sel-project');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">所有專案</option>' + projs.map(p=>`<option${p===cur?' selected':''}>${p}</option>`).join('');
+}
+
+function render() {
+  buildProjectFilter();
+  const gantt = document.getElementById('gantt');
+  const months = parseInt(document.getElementById('sel-months').value);
+  const vtype  = document.getElementById('sel-view').value;
+  const fproj  = document.getElementById('sel-project').value;
+
+  const vStart = addD(new Date(2026,0,1), offsetDays);
+  const vEnd   = addD(vStart, months*30);
+  const totalD = dBetween(vStart, vEnd);
+
+  const filtered = items.filter(it => {
+    if (vtype==='design' && TM[it.type]?.cat!=='design') return false;
+    if (vtype==='construction' && TM[it.type]?.cat!=='construction') return false;
+    if (fproj && it.project!==fproj) return false;
+    return pd(it.end)>=vStart && pd(it.start)<=vEnd;
+  });
+
+  const projs = [...new Set(filtered.map(i=>i.project))];
+  const rows = [];
+  projs.forEach(p => {
+    rows.push({ type:'hdr', label:p });
+    filtered.filter(i=>i.project===p).forEach(i => rows.push({ type:'item', data:i }));
+  });
+
+  const W = Math.max(740, gantt.parentElement.clientWidth || 740);
+  const cW = W - LW;
+  const H = HH + Math.max(2, rows.length)*RH + 16;
+  gantt.setAttribute('width', W);
+  gantt.setAttribute('height', H);
+  gantt.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  const now = today();
+  const todayX = LW + (dBetween(vStart, now)/totalD)*cW;
+
+  let s = '';
+  s += `<rect x="0" y="0" width="${W}" height="${H}" fill="#FAFAF7"/>`;
+  s += `<rect x="${LW}" y="0" width="${cW}" height="${H}" fill="#F5F3EC"/>`;
+
+  let cur = new Date(vStart.getFullYear(), vStart.getMonth(), 1);
+  let colIdx = 0;
+  while (cur <= vEnd) {
+    const x = LW + (dBetween(vStart, cur)/totalD)*cW;
+    const nx = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+    const nxX = LW + (dBetween(vStart, nx)/totalD)*cW;
+    if (colIdx % 2 === 1) {
+      s += `<rect x="${x}" y="${HH}" width="${nxX-x}" height="${H-HH}" fill="rgba(0,0,0,0.018)"/>`;
+    }
+    const lbl = cur.toLocaleDateString('zh-TW', {year:'2-digit', month:'short'});
+    s += `<line x1="${x}" y1="0" x2="${x}" y2="${H}" stroke="rgba(0,0,0,0.07)" stroke-width="0.5"/>`;
+    s += `<text x="${x+6}" y="18" font-size="10" fill="#A8A7A2" font-family="'DM Mono',monospace">${lbl}</text>`;
+    cur = nx; colIdx++;
+  }
+
+  s += `<line x1="0" y1="${HH}" x2="${W}" y2="${HH}" stroke="rgba(0,0,0,0.12)" stroke-width="0.5"/>`;
+  s += `<line x1="${LW}" y1="0" x2="${LW}" y2="${H}" stroke="rgba(0,0,0,0.12)" stroke-width="0.5"/>`;
+  s += `<text x="14" y="${HH/2+5}" font-size="11" fill="#A8A7A2" font-family="'DM Mono',monospace" letter-spacing="0.03em">PROJECT / TASK</text>`;
+
+  if (now>=vStart && now<=vEnd) {
+    s += `<rect x="${todayX-0.5}" y="${HH}" width="1" height="${H-HH}" fill="#C8402A" opacity="0.6"/>`;
+    s += `<rect x="${todayX-18}" y="2" width="36" height="20" rx="10" fill="#C8402A"/>`;
+    s += `<text x="${todayX}" y="15" font-size="9" fill="white" text-anchor="middle" font-family="'DM Mono',monospace">TODAY</text>`;
+  }
+
+  if (rows.length === 0) {
+    gantt.innerHTML = s + `<text x="${LW+cW/2}" y="${HH+60}" font-size="13" fill="#A8A7A2" text-anchor="middle" font-family="'Noto Sans TC',sans-serif">尚無時程資料</text>`;
+    renderLegend(vtype); return;
+  }
+
+  rows.forEach((row, i) => {
+    const y = HH + i*RH;
+    if (row.type === 'hdr') {
+      s += `<rect x="0" y="${y}" width="${W}" height="${RH}" fill="#EDEAE2"/>`;
+      s += `<rect x="0" y="${y+RH-0.5}" width="${W}" height="0.5" fill="rgba(0,0,0,0.08)"/>`;
+      s += `<text x="14" y="${y+RH/2+4}" font-size="12" font-weight="500" fill="#1C1C1A" font-family="'Noto Sans TC',sans-serif">${row.label}</text>`;
+    } else {
+      const it = row.data, meta = TM[it.type] || TM.design_cd;
+      s += `<text x="26" y="${y+RH/2+4}" font-size="11" fill="#6B6A65" font-family="'Noto Sans TC',sans-serif">${it.name}</text>`;
+      const sD=pd(it.start), eD=pd(it.end);
+      const b0=Math.max(0,dBetween(vStart,sD)), b1=Math.min(totalD,dBetween(vStart,eD));
+      if (b1>b0) {
+        const bx=LW+(b0/totalD)*cW, bw=Math.max(4,((b1-b0)/totalD)*cW), by=y+BP, bh=RH-BP*2;
+        s += `<rect class="gbar" data-id="${it.id}" x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="3" fill="${meta.color}" style="cursor:pointer"/>`;
+        if (it.prog>0 && it.prog<100) {
+          s += `<rect x="${bx}" y="${by}" width="${bw*(it.prog/100)}" height="${bh}" rx="3" fill="${meta.text}" opacity="0.15" style="pointer-events:none"/>`;
+          s += `<rect x="${bx+bw*(it.prog/100)-1}" y="${by+2}" width="1.5" height="${bh-4}" fill="${meta.text}" opacity="0.6" style="pointer-events:none"/>`;
+        }
+        if (it.prog===100) {
+          s += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="3" fill="${meta.text}" opacity="0.12" style="pointer-events:none"/>`;
+        }
+        if (bw>56) {
+          const lbl = it.person + (it.prog>0 && bw>100 ? `  ${it.prog}%` : '');
+          s += `<text x="${bx+7}" y="${by+bh/2+4}" font-size="10" fill="${meta.text}" font-family="'Noto Sans TC',sans-serif" style="pointer-events:none">${lbl}</text>`;
+        }
+      }
+    }
+    s += `<line x1="0" y1="${y+RH}" x2="${W}" y2="${y+RH}" stroke="rgba(0,0,0,0.06)" stroke-width="0.5"/>`;
+  });
+
+  gantt.innerHTML = s;
+  gantt.querySelectorAll('.gbar').forEach(bar => {
+    bar.addEventListener('mouseenter', e => showTip(e, bar.dataset.id));
+    bar.addEventListener('mousemove', moveTip);
+    bar.addEventListener('mouseleave', hideTip);
+  });
+
+  renderLegend(vtype);
+}
+
+function renderLegend(vtype) {
+  const entries = Object.entries(TM).filter(([k,v]) => vtype==='all' || v.cat===vtype);
+  const mid = Math.ceil(entries.length/2);
+  let html = '';
+  entries.forEach(([k,v], i) => {
+    if (i===mid) html += '<div class="legend-sep"></div>';
+    html += `<div class="legend-item"><div class="legend-dot" style="background:${v.color}"></div>${v.label}</div>`;
+  });
+  document.getElementById('legend').innerHTML = html;
+}
+
+function showTip(e, id) {
+  const it = items.find(x=>x.id===id); if(!it) return;
+  const meta = TM[it.type] || TM.design_cd;
+  const st = it.prog===100?'完成':it.prog>0?`進行中 ${it.prog}%`:'未開始';
+  document.getElementById('tip').innerHTML =
+    `<div style="font-weight:500;margin-bottom:4px;font-size:13px">${it.project}</div>` +
+    `<div style="color:#6B6A65">${it.name}</div>` +
+    `<div style="color:#A8A7A2;font-family:'DM Mono',monospace;font-size:11px;margin-top:5px">${it.start} → ${it.end}</div>` +
+    `<div style="color:#6B6A65;margin-top:2px">${it.person||'—'}</div>` +
+    `<div style="margin-top:7px;display:flex;align-items:center;gap:8px">` +
+    `<div style="flex:1;height:3px;background:rgba(0,0,0,0.08);border-radius:2px">` +
+    `<div style="width:${it.prog}%;height:100%;background:${meta.text};border-radius:2px"></div></div>` +
+    `<span style="font-size:11px;font-family:'DM Mono',monospace;color:#6B6A65">${st}</span></div>`;
+  document.getElementById('tip').style.opacity = '1';
+  moveTip(e);
+}
+function moveTip(e) {
+  const tip = document.getElementById('tip');
+  tip.style.left = (e.clientX+14)+'px';
+  tip.style.top  = (e.clientY-10)+'px';
+}
+function hideTip() { document.getElementById('tip').style.opacity='0'; }
+
+function jumpToday() {
+  const base=new Date(2026,0,1);
+  offsetDays = Math.max(0, dBetween(base, today())-45);
+  render();
+}
+
+['sel-view','sel-months','sel-project'].forEach(id =>
+  document.getElementById(id).addEventListener('change', render));
+
+loadConfig();
+jumpToday();
+</script>
+</body>
+</html>
